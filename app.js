@@ -3,7 +3,7 @@ const SRC = window.KH_SRC || {};
 const big = id => SRC[id] || ('photos/' + id + '.jpg'), th = id => SRC[id] || ('photos/' + id + '_t.jpg');
 const $ = id => document.getElementById(id);
 const PEOPLE = ['Camille', 'Virgil'];
-const NM = { Camille: 'C', Virgil: 'V' }; // noms affichés
+const NM = { Camille: 'C.', Virgil: 'V.' }; // noms affichés
 const P = {}; D.photos.forEach(p => P[p.id] = p);
 const pad = n => String(n).padStart(2, '0');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -18,6 +18,10 @@ const dE = (a, b) => { a = lab(a); b = lab(b); return Math.hypot(a[0] - b[0], a[
 
 // Teinte d'une photo la plus proche de la couleur visée (sans cible : sa couleur majoritaire)
 const near = (p, t) => t ? (p.near || p.palette.reduce((b, c) => dE(c, t) < dE(b, t) ? c : b)) : p.palette[0];
+
+// Score de ressemblance : 100 % pour une teinte identique, −2 points par unité d'écart (ΔE)
+const score = d => Math.max(0, Math.round(100 - d * 2));
+const mixHex = hs => '#' + [1, 3, 5].map(i => Math.round(hs.reduce((s, h) => s + parseInt(h.substr(i, 2), 16), 0) / hs.length).toString(16).padStart(2, '0')).join('');
 
 // Une chasse = ce qu'une personne a cherché une semaine donnée
 function hunt(w, who) {
@@ -60,36 +64,37 @@ function render() {
   $('count').textContent = PEOPLE.reduce((n, k) => n + R[k].sel.length, 0);
   $('legend').innerHTML = PEOPLE.some(k => R[k].fav) ? ' · <span class="legend">○ coup de cœur</span>' : '';
 
-  let n = 0;
+  // Une photo + sa bande : teinte la plus proche de la cible et score de ressemblance
+  const shot = (p, target, tag) => {
+    const cap = `${NM[p.person]} · ${esc(D.weeks[p.week][p.person])}`;
+    let band = '';
+    if (target) { const c = near(p, target), d = dE(c, target);
+      band = `<div class="band" title="${c.toUpperCase()} · ΔE ${d.toFixed(1)}"><i style="background:${c}"></i><b>${score(d)} %</b></div>`; }
+    return `<figure class="shot">${tag ? `<figcaption class="tag">${tag}</figcaption>` : ''}<img src="${th(p.id)}" loading="lazy" alt="${cap}" data-id="${p.id}" data-cap="${cap}">${band}</figure>`;
+  };
   $('people').innerHTML = PEOPLE.map(key => {
-    const h = R[key], name = NM[key];
-    const bar = h.target
-      ? `<div class="bar">
+    const h = R[key], name = NM[key], k = h.sel.length;
+    let bar = `<div class="bar shape">Chasse à la forme</div>`;
+    if (h.target && k) {
+      const avg = Math.round(h.sel.reduce((s, p) => s + score(dE(near(p, h.target), h.target)), 0) / k);
+      const mean = mixHex(h.sel.map(p => near(p, h.target)));
+      bar = `<div class="bar">
           <div style="background:${h.target};color:${isLight(h.target) ? '#161513' : '#f4f1ea'}"><span>Visée</span><span>${h.target}</span></div>
-          <div style="background:${h.found};color:${isLight(h.found) ? '#161513' : '#f4f1ea'}"><span>Trouvée</span><span>${h.found}</span></div>
-        </div>`
-      : `<div class="bar shape">Chasse à la forme</div>`;
-    n++;
-    const k = h.sel.length, cols = 2, rows = Math.max(1, Math.ceil(k / cols));
-    const note = 'celle-là !';
-    const cells = h.sel.map(p => `<div class="cell"><img src="${th(p.id)}" loading="lazy" alt="${name} — ${esc(h.title)}" data-id="${p.id}" data-cap="${name} · ${esc(h.title)} · R${pad(i + 1)}">${p.id === h.fav ? MARK(note) : ''}</div>`).join('');
-    const frame = `<div class="frame">
-        <div class="img grid" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr)">${cells}</div>
-        <div class="edge"><span>▸ ${n}</span><span>${name.toUpperCase()} · ${k} VUE${k > 1 ? 'S' : ''}</span></div>
-      </div>`;
-    const thumbs = arr => `<div class="thumbs">${arr.map(p => `<img src="${th(p.id)}" loading="lazy" alt="${name}, vue supplémentaire" data-id="${p.id}" data-cap="${name} · ${esc(p.bonus ? 'bonus' : h.title)}">`).join('')}</div>`;
+          <div style="background:${mean};color:${isLight(mean) ? '#161513' : '#f4f1ea'}" title="Moyenne des teintes trouvées : ${mean.toUpperCase()}"><span>Trouvée</span><span>${avg} %</span></div>
+        </div>`;
+    }
     return `<section class="person">
       <div class="who">${name}</div>
       <h1>${esc(h.title)}</h1>
       ${bar}
-      ${k ? `<div class="film">${frame}</div>${h.target ? `<div class="maj" style="grid-template-columns:repeat(${cols},1fr)" aria-label="Pour chaque photo, sa teinte la plus proche de la couleur visée">${h.sel.map(p => { const c = near(p, h.target); return `<span style="background:${c}" title="${c.toUpperCase()}"></span>`; }).join('')}</div>` : ''}<p class="vues">${k} vue${k > 1 ? 's' : ''}</p>` : '<p class="empty">Pas encore de sélection.</p>'}
+      ${k ? `<div class="shots">${h.sel.map(p => shot(p, h.target)).join('')}</div>` : '<p class="empty">Pas encore de sélection.</p>'}
     </section>`;
   }).join('');
-  // Hors grille : les autres belles photos des deux, mélangées en alternance
+  // Hors grille : les autres belles photos des deux, mélangées en alternance, au même format que les grilles
   const pools = PEOPLE.map(k => [...R[k].extra, ...R[k].bonus]), mix = [];
   for (let t = 0; t < Math.max(...pools.map(x => x.length)); t++) pools.forEach(x => x[t] && mix.push(x[t]));
   $('mix').innerHTML = mix.length ? `<div class="mix-head"><span>Hors grille</span><span class="muted">${mix.length} vue${mix.length > 1 ? 's' : ''}</span></div>
-    <div class="mix">${mix.map(p => `<figure><img src="${th(p.id)}" loading="lazy" alt="${NM[p.person]}, hors grille" data-id="${p.id}" data-cap="${NM[p.person]} · ${esc(p.bonus ? 'bonus' : D.weeks[p.week][p.person])} · hors grille"><figcaption>${NM[p.person]}${p.bonus ? ' · bonus' : ''}</figcaption></figure>`).join('')}</div>` : '';
+    <div class="mixgrid">${mix.map(p => shot(p, R[p.person].target, NM[p.person])).join('')}</div>` : '';
   requestAnimationFrame(fitTitles);
   $('prev').setAttribute('aria-disabled', i === 0);
   $('next').setAttribute('aria-disabled', i === list.length - 1);
@@ -114,7 +119,7 @@ function fitTitles() {
   });
   // même hauteur de titre des deux côtés, pour que les grilles commencent à la même ligne
   const hs = [...document.querySelectorAll('.person h1')]; hs.forEach(el => el.style.minHeight = '');
-  const m = Math.max(...hs.map(el => el.offsetHeight)); hs.forEach(el => el.style.minHeight = m + 'px');
+  if (hs.length > 1 && hs[0].getBoundingClientRect().top === hs[1].getBoundingClientRect().top) { const m = Math.max(...hs.map(el => el.offsetHeight)); hs.forEach(el => el.style.minHeight = m + 'px'); }
 }
 addEventListener('resize', fitTitles);
 document.fonts && document.fonts.ready.then(fitTitles);

@@ -116,3 +116,28 @@ button{font:inherit;color:inherit}
 .person{width:100%;max-width:460px;justify-self:center}
 .person h1{overflow-wrap:normal;word-break:normal;hyphens:none}
 .person h1{display:flex;flex-direction:column;justify-content:flex-end}
+
+/* --- photos avec bande + score, un seul conteneur, grilles plus larges --- */
+.people{grid-template-columns:1fr 1fr;gap:56px}
+.person{max-width:none;justify-self:stretch}
+.person .bar{max-width:none}
+.person h1{justify-content:flex-start}
+.shots{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 8px;margin-top:14px}
+.shot{margin:0;position:relative;min-width:0}
+.shot img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;cursor:zoom-in;background:#e6e2da}
+.band{display:flex;align-items:center;gap:8px;margin-top:5px}
+.band i{flex:1;height:10px}
+.band b{font:500 13px 'DM Mono',monospace;min-width:4ch;text-align:right}
+.shot .tag{position:absolute;left:6px;top:6px;padding:2px 6px;background:var(--paper);color:var(--ink);font-size:13px;letter-spacing:.04em}
+.mixgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;padding-top:20px}
+/* texte mono : 13 px minimum, gris plus foncé */
+.rolls .sub{opacity:1;color:var(--muted)}
+.vues,.mix-head,.person .who,.meta,.bar,.rolls button,.top nav,.top .muted,.foot{font-size:13px}
+@media (max-width:640px){
+  .people{grid-template-columns:1fr;gap:44px}
+  .person h1{font-size:clamp(34px,11vw,52px)}
+  .mixgrid{grid-template-columns:repeat(2,1fr)}
+  .bar div span:last-child{display:inline}
+}
+.bar div span{font-size:13px}
+.rolls button.on .sub{color:var(--paper)}
