@@ -65,11 +65,11 @@ function render() {
   $('legend').innerHTML = PEOPLE.some(k => R[k].fav) ? ' · <span class="legend">○ coup de cœur</span>' : '';
 
   // Une photo + sa bande : teinte la plus proche de la cible et score de ressemblance
-  const shot = (p, target, tag) => {
+  const shot = (p, target, tag, noScore) => {
     const cap = `${NM[p.person]} · ${esc(D.weeks[p.week][p.person])}`;
     let band = '';
     if (target) { const c = near(p, target), d = dE(c, target);
-      band = `<div class="band" title="${c.toUpperCase()} · ΔE ${d.toFixed(1)}"><i style="background:${c}"></i><b>${score(d)} %</b></div>`; }
+      band = `<div class="band" title="${c.toUpperCase()} · ΔE ${d.toFixed(1)}"><i style="background:${c}"></i>${noScore ? '' : `<b>${score(d)} %</b>`}</div>`; }
     return `<figure class="shot">${tag ? `<figcaption class="tag">${tag}</figcaption>` : ''}<img src="${th(p.id)}" loading="lazy" alt="${cap}" data-id="${p.id}" data-cap="${cap}">${band}</figure>`;
   };
   $('people').innerHTML = PEOPLE.map(key => {
@@ -94,7 +94,7 @@ function render() {
   const pools = PEOPLE.map(k => [...R[k].extra, ...R[k].bonus]), mix = [];
   for (let t = 0; t < Math.max(...pools.map(x => x.length)); t++) pools.forEach(x => x[t] && mix.push(x[t]));
   $('mix').innerHTML = mix.length ? `<div class="mix-head"><span>Hors grille</span><span class="muted">${mix.length} vue${mix.length > 1 ? 's' : ''}</span></div>
-    <div class="mixgrid">${mix.map(p => shot(p, R[p.person].target, NM[p.person])).join('')}</div>` : '';
+    <div class="mixgrid">${mix.map(p => shot(p, R[p.person].target, NM[p.person], true)).join('')}</div>` : '';
   requestAnimationFrame(fitTitles);
   $('prev').setAttribute('aria-disabled', i === 0);
   $('next').setAttribute('aria-disabled', i === list.length - 1);
