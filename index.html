@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kolorhunt — nuancier</title>
+<meta name="description" content="Kolorhunt : une couleur par semaine, deux regards. Le nuancier du challenge.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="page">
+
+  <section id="home" hidden>
+    <header class="head">
+      <div>
+        <div class="kicker" id="period"></div>
+        <h1 class="brand">Kolorhunt</h1>
+      </div>
+      <div class="info" id="info"></div>
+    </header>
+    <div class="fan" id="fan"></div>
+    <div class="shapes" id="shapes"></div>
+  </section>
+
+  <section id="week" hidden>
+    <nav class="bar">
+      <a href="#">← Nuancier</a>
+      <span class="logo">Kolorhunt</span>
+      <span class="pager"><a id="prev" href="#" aria-label="Semaine précédente">←</a><span id="wnum"></span><a id="next" href="#" aria-label="Semaine suivante">→</a></span>
+    </nav>
+    <div class="kicker sub" id="wdates"></div>
+    <div class="people" id="people"></div>
+    <div id="mix"></div>
+  </section>
+
+</main>
+
+<div id="lightbox" class="lightbox" hidden><img alt=""></div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
