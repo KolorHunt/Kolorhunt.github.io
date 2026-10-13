@@ -71,7 +71,6 @@ function renderWeek(list, i, prefix) {
       <h2>${esc(p.name)}</h2>
       ${p.target ? `<div class="split">
         <div style="background:${p.target};color:${ink(p.target)}"><span>Visée</span><span>${p.target}</span></div>
-        <div style="background:${f};color:${ink(f)}"><span>Moyenne</span><span>${f}</span></div>
       </div>` : `<div class="split shape"><div><span>Chasse à la forme</span><span class="sh ${p.shape}"></span></div></div>`}
       <div class="grid">${p.photos.map((x, j) => `<img src="${th(x.id)}" data-id="${x.id}" alt="${who}. — ${esc(p.name)}, photo ${j + 1}" loading="lazy">`).join('')}</div>
       ${p.target ? `<div class="kicker extract">Couleur extraite</div>
