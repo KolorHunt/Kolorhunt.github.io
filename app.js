@@ -82,7 +82,7 @@ function render() {
       <div class="who">${name}</div>
       <h1>${esc(h.title)}</h1>
       ${bar}
-      ${k ? `<div class="film">${frame}</div><div class="maj" style="grid-template-columns:repeat(${cols},1fr)" aria-label="Pour chaque photo, sa teinte la plus proche de la couleur visée">${h.sel.map(p => { const c = near(p, h.target); return `<span style="background:${c}" title="${c.toUpperCase()}"></span>`; }).join('')}</div><p class="vues">${k} vue${k > 1 ? 's' : ''}</p>` : '<p class="empty">Pas encore de sélection.</p>'}
+      ${k ? `<div class="film">${frame}</div>${h.target ? `<div class="maj" style="grid-template-columns:repeat(${cols},1fr)" aria-label="Pour chaque photo, sa teinte la plus proche de la couleur visée">${h.sel.map(p => { const c = near(p, h.target); return `<span style="background:${c}" title="${c.toUpperCase()}"></span>`; }).join('')}</div>` : ''}<p class="vues">${k} vue${k > 1 ? 's' : ''}</p>` : '<p class="empty">Pas encore de sélection.</p>'}
     </section>`;
   }).join('');
   // Hors grille : les autres belles photos des deux, mélangées en alternance
@@ -90,6 +90,7 @@ function render() {
   for (let t = 0; t < Math.max(...pools.map(x => x.length)); t++) pools.forEach(x => x[t] && mix.push(x[t]));
   $('mix').innerHTML = mix.length ? `<div class="mix-head"><span>Hors grille</span><span class="muted">${mix.length} vue${mix.length > 1 ? 's' : ''}</span></div>
     <div class="mix">${mix.map(p => `<figure><img src="${th(p.id)}" loading="lazy" alt="${NM[p.person]}, hors grille" data-id="${p.id}" data-cap="${NM[p.person]} · ${esc(p.bonus ? 'bonus' : D.weeks[p.week][p.person])} · hors grille"><figcaption>${NM[p.person]}${p.bonus ? ' · bonus' : ''}</figcaption></figure>`).join('')}</div>` : '';
+  requestAnimationFrame(fitTitles);
   $('prev').setAttribute('aria-disabled', i === 0);
   $('next').setAttribute('aria-disabled', i === list.length - 1);
 }
@@ -104,6 +105,20 @@ $('next').onclick = e => { e.preventDefault(); go(1); };
 // ---------- Vignette simple (Au hasard) ----------
 const single = (p, n, src) => `<div class="frame"><div class="img"><img src="${src || th(p.id)}" loading="lazy" alt="${NM[p.person]}, semaine ${p.week}" data-id="${p.id}" data-cap="${NM[p.person]} · ${esc(p.bonus ? 'bonus' : D.weeks[p.week][p.person])} · semaine ${p.week}"></div>
   <div class="pal">${p.palette.map(c => `<span style="background:${c}"></span>`).join('')}</div><div class="edge"><span>▸ ${n}</span><span>${n}A</span></div></div>`;
+// Réduit la taille des titres pour qu'aucun mot ne dépasse la largeur de la grille
+function fitTitles() {
+  document.querySelectorAll('.person h1').forEach(el => {
+    el.style.fontSize = ''; el.style.minHeight = '';
+    let s = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > el.clientWidth + 1 && s > 14) { s -= 1; el.style.fontSize = s + 'px'; }
+  });
+  // même hauteur de titre des deux côtés, pour que les grilles commencent à la même ligne
+  const hs = [...document.querySelectorAll('.person h1')]; hs.forEach(el => el.style.minHeight = '');
+  const m = Math.max(...hs.map(el => el.offsetHeight)); hs.forEach(el => el.style.minHeight = m + 'px');
+}
+addEventListener('resize', fitTitles);
+document.fonts && document.fonts.ready.then(fitTitles);
+
 // ---------- Au hasard ----------
 let last = null;
 function renderRandom() {
@@ -123,7 +138,6 @@ const DESC = { color: 'Une planche par semaine de couleur : vos deux grilles, pu
 function show() {
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   $('v-hunt').hidden = !['color', 'shape'].includes(tab); $('v-hasard').hidden = tab !== 'hasard';
-  $('tabdesc').textContent = DESC[tab];
   if (!$('v-hunt').hidden) render();
   if (tab === 'hasard') renderRandom();
 }

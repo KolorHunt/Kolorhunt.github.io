@@ -110,3 +110,9 @@ button{font:inherit;color:inherit}
 .maj{display:grid;gap:4px;margin-top:6px;width:100%;max-width:460px}
 .maj span{height:18px;display:block}
 
+
+/* --- fond blanc cassé, grilles centrées, titres à la largeur des grilles --- */
+:root{--paper:#f8f6f1}
+.person{width:100%;max-width:460px;justify-self:center}
+.person h1{overflow-wrap:normal;word-break:normal;hyphens:none}
+.person h1{display:flex;flex-direction:column;justify-content:flex-end}
