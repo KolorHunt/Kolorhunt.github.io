@@ -48,6 +48,7 @@ function renderHome() {
       <div class="lab"><b><i class="kh">KH </i>${pad(wk.num)}-${k}</b><span>${p.target}</span></div>
     </a>`;
   $('fan').innerHTML = W.map((wk, i) => `<div class="wk">${chip(wk, i, 'C', wk.c)}${chip(wk, i, 'V', wk.v)}</div>`).join('');
+  $('fan').insertAdjacentHTML('afterend', `<a class="duo-link" href="#duo"><span class="duo-sw">${W.slice(0, 3).map(wk => `<i style="background:${wk.c.target}"></i><i style="background:${wk.v.target}"></i>`).join('')}</span>Duo : tirer une grille au hasard →</a>`);
   $('shapes').innerHTML = S.length ? `<div class="kicker shapes-head">Shape hunt</div>
     <div class="shape-links">${S.map((wk, i) => `<a href="#f${pad(i + 1)}"><span class="sh ${wk.c.shape}"></span><span class="sh ${wk.v.shape}"></span>
       <span>KH ${pad(wk.num)} · ${esc(wk.c.name)} / ${esc(wk.v.name)}</span></a>`).join('')}</div>` : '';
@@ -98,8 +99,31 @@ function alignTitles() {
 addEventListener('resize', alignTitles);
 document.fonts && document.fonts.ready.then(alignTitles);
 
+const lb = $('lightbox');
+
+/* ---------- duo : grille de 6 qui alterne les deux couleurs d'une semaine ---------- */
+let duoN = 0, lastWeek = -1;
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; } return a; };
+function renderDuo() {
+  let i; do { i = Math.floor(Math.random() * W.length); } while (W.length > 1 && i === lastWeek); lastWeek = i;
+  const wk = W[i], C = shuffle([...wk.c.photos, ...wk.c.extra]).slice(0, 3), V = shuffle([...wk.v.photos, ...wk.v.extra]).slice(0, 3);
+  // damier sur 3 colonnes : C V C / V C V
+  const order = [C[0], V[0], C[1], V[1], C[2], V[2]];
+  duoN++;
+  $('duokick').textContent = `Semaine ${pad(wk.num)} · tirage n°${pad(duoN)}`;
+  $('duotitle').innerHTML = `${esc(wk.c.name)} <span class="x">×</span> ${esc(wk.v.name)}`;
+  $('duobars').innerHTML = [['C', wk.c], ['V', wk.v]].map(([who, p]) => `<div style="background:${p.target};color:${isLight(p.target) ? '#161513' : '#f7f5f0'}"><span>${who}. · ${esc(p.name)}</span><span>${p.target}</span></div>`).join('');
+  $('duogrid').innerHTML = order.map(x => { const p = x.person === 'Camille' ? wk.c : wk.v, r = extract(x, p.target);
+    return `<figure><img src="${th(x.id)}" data-id="${x.id}" alt="${NM[x.person]}. — ${esc(p.name)}"><i style="background:${r.hex}" title="${r.hex}"></i></figure>`; }).join('');
+}
+$('draw').onclick = renderDuo;
+$('duo').addEventListener('click', e => { const img = e.target.closest('img[data-id]'); if (!img) return;
+  lb.querySelector('img').src = big(img.dataset.id); lb.querySelector('img').alt = img.alt; lb.hidden = false; });
+
 /* ---------- routeur ---------- */
 function route() {
+  if (location.hash === '#duo') { $('home').hidden = true; $('week').hidden = true; $('duo').hidden = false; renderDuo(); window.scrollTo(0, 0); return; }
+  $('duo').hidden = true;
   const m = location.hash.match(/^#([sf])(\d+)/);
   const list = m && m[1] === 'f' ? S : W, i = m ? +m[2] - 1 : -1;
   const isWeek = i >= 0 && i < list.length;
@@ -109,7 +133,6 @@ function route() {
 }
 window.addEventListener('hashchange', route);
 
-const lb = $('lightbox');
 $('week').addEventListener('click', e => {
   const img = e.target.closest('img[data-id]'); if (!img) return;
   lb.querySelector('img').src = big(img.dataset.id); lb.querySelector('img').alt = img.alt; lb.hidden = false;
@@ -117,6 +140,7 @@ $('week').addEventListener('click', e => {
 lb.onclick = () => (lb.hidden = true);
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { lb.hidden = true; return; }
+  if (!$('duo').hidden && lb.hidden && (e.key === ' ' || e.key === 'Enter') && document.activeElement === document.body) { e.preventDefault(); renderDuo(); return; }
   if ($('week').hidden || !lb.hidden) return;
   if (e.key === 'ArrowLeft') $('prev').click();
   if (e.key === 'ArrowRight') $('next').click();
