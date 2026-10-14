@@ -96,3 +96,34 @@ body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
 .duo-head h2{font-size:clamp(26px,3vw,40px)}
 .duo-head{padding-top:22px}
 .duo-wrap{max-width:max(340px,min(100%,calc((100vh - 290px) * 1.2)))}
+
+/* Duo : grille verticale 2 × 3, comme les grilles d'origine */
+.duogrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.duo-wrap{max-width:max(340px,min(100%,calc((100vh - 120px) / 1.75)))}
+.duo-head{flex-direction:column;align-items:flex-start;gap:14px}
+.duo-head h2{font-size:clamp(26px,3vw,38px)}
+.duo-bars div span:first-child{overflow:hidden;text-overflow:ellipsis}
+.duo-wrap{max-width:max(320px,min(100%,calc((100vh - 290px) / 1.95)))}
+.duo-head{flex-direction:column;align-items:flex-start;gap:14px}
+.duo-head h2{font-size:clamp(24px,2.4vw,34px)}
+
+/* Duo : infos à gauche, grille verticale à droite, le tout tient dans l'écran */
+.duo-wrap{max-width:none;display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:40px;align-items:start;padding-top:24px}
+.duo-head{padding-top:0}
+.duo-bars{flex-direction:column;height:auto;gap:4px}
+.duo-bars div{height:36px}
+.duogrid{width:min(calc((100vh - 150px) / 1.95), 640px)}
+@media (max-width:760px){
+  .duo-wrap{grid-template-columns:1fr;gap:16px}
+  .duogrid{width:100%}
+  .duo-bars{flex-direction:row}
+  .duo-bars div span:last-child{display:none}
+}
+.duo-bars div{flex:none;height:36px}
+@media (max-width:760px){.duo-bars div{flex:1}}
+
+/* Duo au format des grilles d'origine : un montage vertical 9:16, 2 colonnes × 3 rangées, sans espace */
+.duogrid{aspect-ratio:9/16;width:min(calc((100vh - 150px) * 9 / 16), 560px);gap:0;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr))}
+.duogrid figure{margin:0;min-height:0;overflow:hidden}
+.duogrid img{width:100%;height:100%;aspect-ratio:auto;object-fit:cover}
+@media (max-width:760px){.duogrid{width:100%}}

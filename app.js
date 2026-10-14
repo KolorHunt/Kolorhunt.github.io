@@ -115,7 +115,7 @@ function renderDuo() {
   $('duotitle').innerHTML = `${esc(wk.c.name)} <span class="x">×</span> ${esc(wk.v.name)}`;
   $('duobars').innerHTML = [['C', wk.c], ['V', wk.v]].map(([who, p]) => `<div style="background:${p.target};color:${isLight(p.target) ? '#161513' : '#f7f5f0'}"><span>${who}. · ${esc(p.name)}</span><span>${p.target}</span></div>`).join('');
   $('duogrid').innerHTML = order.map(x => { const p = x.person === 'Camille' ? wk.c : wk.v, r = extract(x, p.target);
-    return `<figure><img src="${th(x.id)}" data-id="${x.id}" alt="${NM[x.person]}. — ${esc(p.name)}"><i style="background:${r.hex}" title="${r.hex}"></i></figure>`; }).join('');
+    return `<figure class="${x.person === 'Camille' ? 'is-c' : 'is-v'}"><img src="${th(x.id)}" data-id="${x.id}" alt="${NM[x.person]}. — ${esc(p.name)}"></figure>`; }).join('');
 }
 $('draw').onclick = renderDuo;
 $('duo').addEventListener('click', e => { const img = e.target.closest('img[data-id]'); if (!img) return;
