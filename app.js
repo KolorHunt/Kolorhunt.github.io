@@ -87,7 +87,7 @@ function renderWeek(list, i, prefix) {
   const pools = [wk.c.extra, wk.v.extra], mix = [];
   for (let t = 0; t < Math.max(...pools.map(x => x.length)); t++) pools.forEach(x => x[t] && mix.push(x[t]));
   $('mix').innerHTML = mix.length ? `<div class="kicker extract mix-head"><span>Hors grille</span><span>${mix.length} photo${mix.length > 1 ? 's' : ''}</span></div>
-    <div class="mixgrid">${mix.map(x => `<figure><img src="${th(x.id)}" data-id="${x.id}" alt="${NM[x.person]}., hors grille" loading="lazy"><figcaption>${NM[x.person]}.</figcaption></figure>`).join('')}</div>` : '';
+    <div class="mixgrid">${mix.map(x => `<figure><img src="${th(x.id)}" data-id="${x.id}" alt="${NM[x.person]}., hors grille" loading="lazy"><figcaption>${NM[x.person]}.${x.bonus ? ` · bonus ${esc(((window.KH_BONUS || {})[wk.num] || '').toLowerCase())}` : ''}</figcaption></figure>`).join('')}</div>` : '';
 }
 
 // Même hauteur de titre des deux côtés (seulement quand ils sont côte à côte)
@@ -106,9 +106,10 @@ let duoN = 0, lastWeek = -1;
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; } return a; };
 function renderDuo() {
   let i; do { i = Math.floor(Math.random() * W.length); } while (W.length > 1 && i === lastWeek); lastWeek = i;
-  const wk = W[i], C = shuffle([...wk.c.photos, ...wk.c.extra]).slice(0, 3), V = shuffle([...wk.v.photos, ...wk.v.extra]).slice(0, 3);
-  // damier sur 3 colonnes : C V C / V C V
-  const order = [C[0], V[0], C[1], V[1], C[2], V[2]];
+  const wk = W[i], pool = p => [...p.photos, ...p.extra].filter(x => !x.bonus); // jamais les photos bonus
+  const C = shuffle(pool(wk.c)).slice(0, 3), V = shuffle(pool(wk.v)).slice(0, 3);
+  // grille verticale 2 × 3 en damier : C V / V C / C V
+  const order = [C[0], V[0], V[1], C[1], C[2], V[2]];
   duoN++;
   $('duokick').textContent = `Semaine ${pad(wk.num)} · tirage n°${pad(duoN)}`;
   $('duotitle').innerHTML = `${esc(wk.c.name)} <span class="x">×</span> ${esc(wk.v.name)}`;
