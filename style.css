@@ -127,3 +127,25 @@ body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
 .duogrid figure{margin:0;min-height:0;overflow:hidden}
 .duogrid img{width:100%;height:100%;aspect-ratio:auto;object-fit:cover}
 @media (max-width:760px){.duogrid{width:100%}}
+
+/* Duo : une seule colonne à la largeur exacte de la grille ; titre et couleurs face à face au-dessus */
+.duo-col{--w:min(calc((100vh - 310px) * 9 / 16), 560px);width:max(300px,var(--w));margin:0 auto;padding-top:22px}
+.duo-col h2{font-weight:700;font-size:clamp(24px,3vw,38px);letter-spacing:-.03em;line-height:1;margin:6px 0 12px;white-space:nowrap;overflow:hidden}
+.duo-col h2 .x{font-weight:400;color:var(--muted)}
+.duo-col .duo-bars{display:flex;flex-direction:row;height:36px;gap:0;margin:0}
+.duo-col .duo-bars div{flex:1 1 0;min-width:0;height:36px;padding:0 10px}
+.duo-col .duogrid{width:100%}
+.duo-col .draw{display:block;width:100%;margin-top:12px}
+@media (max-width:760px){.duo-col{width:100%}}
+.duo-col{--w:min(calc((100vh - 270px) * 9 / 16), 560px)}
+.duo-col .duo-bars div span:first-child{min-width:0}
+.duo-col .duo-bars .hex{display:none!important}
+
+.duo-mode{display:flex;margin-bottom:14px}
+.duo-mode button{flex:1;font:500 13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 0;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.duo-mode button+button{border-left:0}
+.duo-mode button.on{background:var(--ink);color:var(--paper)}
+.duo-col .duo-bars.stripes div{display:flex;flex-direction:column;padding:0}
+.duo-col .duo-bars.stripes i{flex:1;display:block}
+.duo-col .duo-bars.stripes div{align-items:stretch;justify-content:stretch;gap:0}
+.duo-col .duo-bars.stripes{height:36px}
