@@ -104,16 +104,11 @@ const lb = $('lightbox');
 /* ---------- duo : grille de 6 qui alterne les deux couleurs d'une semaine ---------- */
 let duoN = 0, lastWeek = -1;
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(Math.random() * (i + 1)); [a[i], a[k]] = [a[k], a[i]]; } return a; };
-let duoMode = 'mix'; // 'mix' : toutes les semaines mélangées ; 'week' : une seule semaine
 function renderDuo() {
   const ok = x => !x.bonus;                                   // jamais les photos bonus (terre cuite)
-  // Même semaine : C et V de la même semaine. Mélange : la couleur de C d'une semaine, celle de V d'une autre.
-  let ic, iv, tries = 0;
-  do {
-    ic = Math.floor(Math.random() * W.length);
-    iv = duoMode === 'week' ? ic : Math.floor(Math.random() * W.length);
-  } while (++tries < 50 && ((duoMode === 'mix' && W.length > 1 && ic === iv) || `${ic}-${iv}` === lastWeek));
-  lastWeek = `${ic}-${iv}`;
+  // Toujours une seule semaine : les photos de C et de V de cette semaine-là, jamais de semaines mélangées
+  let ic; do { ic = Math.floor(Math.random() * W.length); } while (W.length > 1 && ic === lastWeek);
+  lastWeek = ic; const iv = ic;
   const pc = W[ic].c, pv = W[iv].v;
   const C = shuffle([...pc.photos, ...pc.extra].filter(ok)).slice(0, 3);
   const V = shuffle([...pv.photos, ...pv.extra].filter(ok)).slice(0, 3);
@@ -121,7 +116,7 @@ function renderDuo() {
   const order = [C[0], V[0], V[1], C[1], C[2], V[2]];
   duoN++;
   const ink = h => isLight(h) ? '#161513' : '#f7f5f0';
-  $('duokick').textContent = ic === iv ? `Semaine ${pad(W[ic].num)} · tirage n°${pad(duoN)}` : `Semaines ${pad(W[ic].num)} × ${pad(W[iv].num)} · tirage n°${pad(duoN)}`;
+  $('duokick').textContent = `Semaine ${pad(W[ic].num)} · tirage n°${pad(duoN)}`;
   $('duotitle').innerHTML = `${esc(pc.name)} <span class="x">×</span> ${esc(pv.name)}`;
   $('duobars').className = 'duo-bars';
   $('duobars').innerHTML = [['C', pc], ['V', pv]].map(([who, p]) => `<div style="background:${p.target};color:${ink(p.target)}" title="${who}. · ${esc(p.name)} · ${p.target}"><span>${esc(p.name)}</span></div>`).join('');
@@ -130,8 +125,6 @@ function renderDuo() {
     return `<figure class="${x.person === 'Camille' ? 'is-c' : 'is-v'}"><img src="${th(x.id)}" data-id="${x.id}" alt="${NM[x.person]}. — ${esc(p.name)}" title="${NM[x.person]}. · ${esc(p.name)}"></figure>`; }).join('');
 }
 $('draw').onclick = renderDuo;
-$('duomode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return;
-  duoMode = b.dataset.m; $('duomode').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); renderDuo(); });
 // Le titre et les barres ne dépassent jamais la largeur de la grille
 function fitDuo() {
   const t = $('duotitle'); t.style.fontSize = '';
