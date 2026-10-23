@@ -26,7 +26,7 @@ const mean = rs => rgbHex([0, 1, 2].map(k => rs.reduce((s, r) => s + r.rgb[k], 0
 /* ---------- données ---------- */
 const nums = Object.keys(D.weeks).map(Number).sort((a, b) => a - b);
 const side = (w, who) => { const name = D.weeks[w][who], all = D.photos.filter(p => p.week == w && p.person == who);
-  return { name, target: TGT[name], shape: SHP[name], photos: all.filter(p => p.selection), extra: all.filter(p => !p.selection) }; };
+  return { name, target: TGT[name], shape: SHP[name], photos: all.filter(p => p.selection), extra: all.filter(p => !p.selection && !p.offtheme), free: all.filter(p => p.offtheme) }; };
 const WEEK = w => ({ num: w, c: side(w, 'Camille'), v: side(w, 'Virgil') });
 const W = nums.filter(w => !SHP[D.weeks[w].Camille]).map(WEEK);   // semaines de couleur : le nuancier
 const S = nums.filter(w => SHP[D.weeks[w].Camille]).map(WEEK);    // semaines de formes
@@ -88,6 +88,11 @@ function renderWeek(list, i, prefix) {
   for (let t = 0; t < Math.max(...pools.map(x => x.length)); t++) pools.forEach(x => x[t] && mix.push(x[t]));
   $('mix').innerHTML = mix.length ? `<div class="kicker extract mix-head"><span>Hors grille</span><span>${mix.length} photo${mix.length > 1 ? 's' : ''}</span></div>
     <div class="mixgrid">${mix.map(x => `<figure><img src="${th(x.id)}" data-id="${x.id}" alt="${NM[x.person]}., hors grille" loading="lazy"><figcaption>${NM[x.person]}.${x.bonus ? ` · bonus ${esc(((window.KH_BONUS || {})[wk.num] || '').toLowerCase())}` : ''}</figcaption></figure>`).join('')}</div>` : '';
+  // Hors chasse : photos partagées cette semaine-là, mais pas prises pour la couleur
+  const free = [], fp = [wk.c.free, wk.v.free];
+  for (let t = 0; t < Math.max(...fp.map(x => x.length)); t++) fp.forEach(x => x[t] && free.push(x[t]));
+  if (free.length) $('mix').insertAdjacentHTML('beforeend', `<div class="kicker extract mix-head"><span>Hors chasse · partagées cette semaine-là</span><span>${free.length} photo${free.length > 1 ? 's' : ''}</span></div>
+    <div class="mixgrid free">${free.map(x => `<figure><img src="${th(x.id)}" data-id="${x.id}" alt="${NM[x.person]}., hors chasse" loading="lazy"><figcaption>${NM[x.person]}.</figcaption></figure>`).join('')}</div>`);
 }
 
 // Même hauteur de titre des deux côtés (seulement quand ils sont côte à côte)

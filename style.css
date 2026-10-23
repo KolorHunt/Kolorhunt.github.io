@@ -149,3 +149,5 @@ body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset
 .duo-col .duo-bars.stripes i{flex:1;display:block}
 .duo-col .duo-bars.stripes div{align-items:stretch;justify-content:stretch;gap:0}
 .duo-col .duo-bars.stripes{height:36px}
+
+.mixgrid.free img{filter:saturate(.85)}
