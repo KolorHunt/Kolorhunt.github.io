@@ -27,12 +27,12 @@ const mean = rs => rgbHex([0, 1, 2].map(k => rs.reduce((s, r) => s + r.rgb[k], 0
 const nums = Object.keys(D.weeks).map(Number).sort((a, b) => a - b);
 const side = (w, who) => { const name = D.weeks[w][who], all = D.photos.filter(p => p.week == w && p.person == who);
   return { name, target: TGT[name], shape: SHP[name], photos: all.filter(p => p.selection), extra: all.filter(p => !p.selection && !p.offtheme), free: all.filter(p => p.offtheme) }; };
-const WEEK = w => ({ num: w, c: side(w, 'Camille'), v: side(w, 'Virgil') });
+const WEEK = w => ({ num: Math.floor(w), key: w, c: side(w, 'Camille'), v: side(w, 'Virgil') }); // key 7.5 = 2e chasse de la semaine 7
 const W = nums.filter(w => !SHP[D.weeks[w].Camille]).map(WEEK);   // semaines de couleur : le nuancier
-const S = nums.filter(w => SHP[D.weeks[w].Camille]).map(WEEK);    // semaines de formes
+const S = nums.filter(w => SHP[D.weeks[w].Camille]).map(WEEK);    // autres chasses : formes, ombres…
 function dates(wk) {
   if (DATES[wk.num]) return DATES[wk.num];
-  const ds = D.photos.filter(p => p.week == wk.num && p.date).map(p => p.date.split('/').reverse().join('')).sort();
+  const ds = D.photos.filter(p => p.week == wk.key && p.date).map(p => p.date.split('/').reverse().join('')).sort();
   return ds.length ? MOIS[+ds[0].slice(0, 2) - 1] + ' 2026' : '';
 }
 const found = p => mean(p.photos.map(x => extract(x, p.target)));
@@ -40,24 +40,36 @@ const found = p => mean(p.photos.map(x => extract(x, p.target)));
 /* ---------- accueil ---------- */
 function renderHome() {
   $('period').textContent = `Nuancier · ${dates(W[0])} → ${dates(W[W.length - 1])}`;
-  $('info').innerHTML = `${W.length * 2} teintes · ${W.length} semaines<br>clique une lamelle pour ouvrir sa semaine`;
+  $('info').innerHTML = `${W.length * 2} teintes · ${W.length} semaines<br>clique une couleur pour ouvrir sa semaine`;
+  const ink = h => isLight(h) ? '#161513' : '#f7f5f0';
+  // la semaine la plus récente : deux grandes lamelles verticales
   const chip = (wk, i, k, p) => `
     <a class="chip" href="#s${pad(i + 1)}" aria-label="Semaine ${wk.num}, ${esc(p.name)}">
-      <div class="top" style="background:${p.target};color:${isLight(p.target) ? '#161513' : '#f7f5f0'}"><span>${esc(p.name)}</span></div>
+      <div class="top" style="background:${p.target};color:${ink(p.target)}"><span>${esc(p.name)}</span></div>
       <div class="bot" style="background:${found(p)}" title="Moyenne trouvée"></div>
       <div class="lab"><b><i class="kh">KH </i>${pad(wk.num)}-${k}</b><span>${p.target}</span></div>
     </a>`;
-  $('fan').innerHTML = W.map((wk, i) => `<div class="wk">${chip(wk, i, 'C', wk.c)}${chip(wk, i, 'V', wk.v)}</div>`).join('');
-  $('duolink').innerHTML = `<a class="duo-link" href="#duo"><span class="duo-sw">${W.slice(0, 3).map(wk => `<i style="background:${wk.c.target}"></i><i style="background:${wk.v.target}"></i>`).join('')}</span>Duo : tirer une grille au hasard →</a>`;
-  $('shapes').innerHTML = S.length ? `<div class="kicker shapes-head">Shape hunt</div>
-    <div class="shape-links">${S.map((wk, i) => `<a href="#f${pad(i + 1)}"><span class="sh ${wk.c.shape}"></span><span class="sh ${wk.v.shape}"></span>
-      <span>KH ${pad(wk.num)} · ${esc(wk.c.name)} / ${esc(wk.v.name)}</span></a>`).join('')}</div>` : '';
+  const li = W.length - 1, last = W[li];
+  // les semaines précédentes : des bandes horizontales, de la plus récente à la plus ancienne
+  const band = (wk, i) => `
+    <a class="hband" href="#s${pad(i + 1)}" aria-label="Semaine ${wk.num}, ${esc(wk.c.name)} et ${esc(wk.v.name)}">
+      <span class="hlab"><b>KH ${pad(wk.num)}</b><i>${dates(wk).split(' ')[0]}</i></span>
+      ${[wk.c, wk.v].map((p, k) => `<span class="hc" style="background:${p.target};color:${ink(p.target)}"><em>${esc(p.name)}</em><small>${k ? 'V.' : 'C.'} · ${p.target}</small><i style="background:${found(p)}"></i></span>`).join('')}
+    </a>`;
+  $('fan').innerHTML = `
+    <div class="latest"><div class="kicker">Cette semaine · KH ${pad(last.num)}</div><div class="wk">${chip(last, li, 'C', last.c)}${chip(last, li, 'V', last.v)}</div></div>
+    <div class="older">${W.slice(0, li).map((wk, i) => ({ wk, i })).reverse().map(({ wk, i }) => band(wk, i)).join('')}</div>`;
+  $('duolink').innerHTML = `<a class="duo-link" href="#duo"><span class="duo-sw">${W.slice(-3).map(wk => `<i style="background:${wk.c.target}"></i><i style="background:${wk.v.target}"></i>`).join('')}</span>Duo : tirer une grille au hasard →</a>`;
+  const nm = wk => wk.c.name === wk.v.name ? esc(wk.c.name) : `${esc(wk.c.name)} / ${esc(wk.v.name)}`;
+  $('shapes').innerHTML = S.length ? `<div class="kicker shapes-head">Autres chasses</div>
+    <div class="shape-links">${S.map((wk, i) => `<a href="#f${pad(i + 1)}"><span class="sh ${wk.c.shape}"></span>${wk.v.shape !== wk.c.shape ? `<span class="sh ${wk.v.shape}"></span>` : ''}
+      <span>KH ${pad(wk.num)} · ${nm(wk)}</span></a>`).join('')}</div>` : '';
 }
 
 /* ---------- semaine ---------- */
 function renderWeek(list, i, prefix) {
   const wk = list[i], isShape = prefix === 'f';
-  $('wnum').textContent = `${isShape ? 'Formes' : 'Semaine'} ${pad(wk.num)}`;
+  $('wnum').textContent = `${isShape ? (wk.c.shape === 'shadow' ? 'Ombres' : 'Formes') : 'Semaine'} ${pad(wk.num)}`;
   $('prev').href = `#${prefix}${pad(i)}`; $('prev').classList.toggle('off', i === 0);
   $('next').href = `#${prefix}${pad(i + 2)}`; $('next').classList.toggle('off', i === list.length - 1);
   const total = wk.c.photos.length + wk.v.photos.length;
@@ -72,7 +84,7 @@ function renderWeek(list, i, prefix) {
       <h2>${esc(p.name)}</h2>
       ${p.target ? `<div class="split">
         <div style="background:${p.target};color:${ink(p.target)}"><span>Visée</span><span>${p.target}</span></div>
-      </div>` : `<div class="split shape"><div><span>Chasse à la forme</span><span class="sh ${p.shape}"></span></div></div>`}
+      </div>` : `<div class="split shape"><div><span>${p.shape === 'shadow' ? 'Chasse aux ombres' : 'Chasse à la forme'}</span><span class="sh ${p.shape}"></span></div></div>`}
       <div class="grid">${p.photos.map((x, j) => `<img src="${th(x.id)}" data-id="${x.id}" alt="${who}. — ${esc(p.name)}, photo ${j + 1}" loading="lazy">`).join('')}</div>
       ${p.target ? `<div class="kicker extract">Couleur extraite</div>
       <div class="cards" style="grid-template-columns:repeat(${p.photos.length},minmax(0,1fr))">
